@@ -245,13 +245,24 @@ pvpick <- function(x, alpha=0.95, pv="au", type="geq", max.only=TRUE)
 
 parPvclust <- function(cl, data, method.hclust="average",
                        method.dist="correlation", use.cor="pairwise.complete.obs",
-                       nboot=1000, r=seq(.5,1.4,by=.1), store=FALSE)
+                       nboot=1000, r=seq(.5,1.4,by=.1), store=FALSE,
+                       init.rand=TRUE, seed=NULL)
   {
     if(!(require(snow))) stop("Package snow is required for parPvclust.")
     
     if((ncl <- length(cl)) < 2 || ncl > nboot) {
       warning("Too small value for nboot: non-parallel version is executed.")
       return(pvclust(data,method.hclust,method.dist,use.cor,nboot,r,store))
+    }
+
+    if(init.rand) {
+      if(is.null(seed))
+        seed <- 1:length(cl)
+      else if(length(seed) != length(cl))
+        stop("seed and cl should have the same length.")
+      
+      # setting random seeds
+      parLapply(cl, as.list(seed), set.seed)
     }
 
     # data: (n,p) matrix, n-samples, p-variables
