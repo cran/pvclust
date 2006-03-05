@@ -3,6 +3,7 @@ export(pvpick)
 export(msfit)
 export(msplot)
 export(pvrect)
+export(seplot)
 export(parPvclust)
 
 S3method(plot,     pvclust)

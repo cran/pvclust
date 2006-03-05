@@ -16,8 +16,12 @@ pvclust <- function(data, method.hclust="average",
     size <- floor(n*r)
     rl <- length(size)
     
-    if(rl == 1)
-      r <- list(1)
+    if(rl == 1) {
+      if(r != 1.0)
+        warning("Relative sample size r is set to 1.0. AU p-values are not calculated\n")
+      
+      r <- list(1.0)
+    }
     else
       r <- as.list(size/n)
     
@@ -279,8 +283,12 @@ parPvclust <- function(cl, data, method.hclust="average",
     size <- floor(n*r)
     rl <- length(size)
     
-    if(rl == 1)
-      r <- list(1)
+    if(rl == 1) {
+      if(r != 1.0)
+        warning("Relative sample size r is set to 1.0. AU p-values are not calculated\n")
+      
+      r <- list(1.0)
+    }
     else
       r <- as.list(size/n)
 
@@ -326,7 +334,8 @@ msfit <- function(bp, r, nboot) {
   a <- list(p=p, se=se, coef=coef, df=0, rss=0, pchi=0); class(a) <- "msfit"
 
   if(sum(use) < 2) {
-    if(mean(bp) < .5) a$p[] <- c(0, 0) else a$p[] <- c(1, 1)
+    # if(mean(bp) < .5) a$p[] <- c(0, 0) else a$p[] <- c(1, 1)
+    if(mean(bp) < .5) a$p[] <- c(0, bp[r==1.0]) else a$p[] <- c(1, bp[r==1.0])
     return(a)
   }
 
@@ -404,3 +413,25 @@ summary.msfit <- function(object, digits=3, ...) {
       ",   p-value: ", round(object$pchi, digits=digits),
       " on ", object$df, " DF\n\n", sep="")
 }
+
+seplot <- function(object, type=c("au", "bp"), identify=FALSE,
+                   main=NULL, xlab=NULL, ylab=NULL, ...)
+  {
+    if(!is.na(pm <- pmatch(type[1], c("au", "bp")))) {
+      wh <- c("au", "bp")[pm]
+      
+      if(is.null(main))
+        main <- "p-value vs standard error plot"
+      if(is.null(xlab))
+        xlab <- c("AU p-value", "BP value")[pm]
+      if(is.null(ylab))
+        ylab <- "Standard Error"
+      
+      plot(object$edges[,wh], object$edges[,paste("se", wh, sep=".")],
+           main=main, xlab=xlab, ylab=ylab, ...)
+      if(identify)
+        identify(x=object$edges[,wh], y=object$edges[,paste("se", wh, sep=".")],
+                 labels=row.names(object$edges))
+    }
+    else stop("'type' should be \"au\" or \"bp\".")
+  }
