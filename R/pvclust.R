@@ -1,6 +1,6 @@
 pvclust <- function(data, method.hclust="average",
                     method.dist="correlation", use.cor="pairwise.complete.obs",
-                    nboot=1000, r=seq(.5,1.4,by=.1), store=FALSE)
+                    nboot=1000, r=seq(.5,1.4,by=.1), store=FALSE, weight=FALSE)
   {
     # data: (n,p) matrix, n-samples, p-variables
     n <- nrow(data); p <- ncol(data)
@@ -26,7 +26,8 @@ pvclust <- function(data, method.hclust="average",
       r <- as.list(size/n)
     
     mboot <- lapply(r, boot.hclust, data=data, object.hclust=data.hclust, nboot=nboot,
-                    method.dist=method.dist, use.cor=use.cor, method.hclust=method.hclust, store=store)
+                    method.dist=method.dist, use.cor=use.cor,
+                    method.hclust=method.hclust, store=store, weight=weight)
     
     result <- pvclust.merge(data=data, object.hclust=data.hclust, mboot=mboot)
     
@@ -250,6 +251,7 @@ pvpick <- function(x, alpha=0.95, pv="au", type="geq", max.only=TRUE)
 parPvclust <- function(cl, data, method.hclust="average",
                        method.dist="correlation", use.cor="pairwise.complete.obs",
                        nboot=1000, r=seq(.5,1.4,by=.1), store=FALSE,
+                       weight=FALSE,
                        init.rand=TRUE, seed=NULL)
   {
     if(!(require(snow))) stop("Package snow is required for parPvclust.")
@@ -301,7 +303,8 @@ parPvclust <- function(cl, data, method.hclust="average",
     
     mlist <- parLapply(cl, nbl, pvclust.node,
                        r=r, data=data, object.hclust=data.hclust, method.dist=method.dist,
-                       use.cor=use.cor, method.hclust=method.hclust, store=store)
+                       use.cor=use.cor, method.hclust=method.hclust,
+                       store=store, weight=weight)
     cat("Done.\n")
     
     mboot <- mlist[[1]]

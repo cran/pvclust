@@ -65,14 +65,15 @@ hc2split <- function(x)
     return(split)
   }
 
-pvclust.node <- function(x, r, ...)
+pvclust.node <- function(x, r,...)
   {
-    require(pvclust)
+#    require(pvclust)
     mboot.node <- lapply(r, boot.hclust, nboot=x, ...)
     return(mboot.node)
   }
 
-boot.hclust <- function(r, data, object.hclust, method.dist, use.cor, method.hclust, nboot, store)
+boot.hclust <- function(r, data, object.hclust, method.dist, use.cor,
+                        method.hclust, nboot, store, weight=F)
 { 
   n     <- nrow(data)
   size  <- round(n*r, digit=0)
@@ -87,20 +88,34 @@ boot.hclust <- function(r, data, object.hclust, method.dist, use.cor, method.hcl
   # bootstrap start
   rp <- as.character(round(r,digit=2)); if(r == 1) rp <- paste(rp,".0",sep="")
   cat(paste("Bootstrap (r = ", rp, ")... ", sep=""))
-
+  w0 <- rep(1,n) # equal weight
+  na.flag <- 0
+  
   for(i in 1:nboot){
-    smpl <- sample(1:n, size, replace=TRUE)
-    distance  <- dist.pvclust(data[smpl,],method=method.dist,use.cor=use.cor)
-    x.hclust  <- hclust(distance,method=method.hclust)
-    pattern.i <- hc2split(x.hclust)$pattern
-
-    edges.cnt <- edges.cnt + table(factor(pattern.i, levels=pattern))
+    if(weight && r>10) {  ## <- this part should be improved
+      w1 <- as.vector(rmultinom(1,size,w0)) # resampled weight
+      suppressWarnings(distance <- distw.pvclust(data,w1,method=method.dist,use.cor=use.cor))
+    } else {
+      smpl <- sample(1:n, size, replace=TRUE)
+      suppressWarnings(distance  <- dist.pvclust(data[smpl,],method=method.dist,use.cor=use.cor))
+    }
+    if(all(is.finite(distance))) { # check if distance is valid
+      x.hclust  <- hclust(distance,method=method.hclust)
+      pattern.i <- hc2split(x.hclust)$pattern # split
+      edges.cnt <- edges.cnt + table(factor(pattern.i,  levels=pattern))
+    } else {
+      x.hclust <- NULL
+	  na.flag <- 1
+    }
 
     if(store)
       st[[i]] <- x.hclust
   }
   cat("Done.\n")
   # bootstrap done
+  
+  if(na.flag == 1)
+	warning(paste("inappropriate distance matrices are omitted in computation: r = ", r), call.=FALSE)
 
   boot <- list(edges.cnt=edges.cnt, method.dist=method.dist, use.cor=use.cor,
                method.hclust=method.hclust, nboot=nboot, size=size, r=r, store=st)
@@ -186,4 +201,70 @@ dist.pvclust <- function(x, method="euclidean", use.cor="pairwise.complete.obs")
   }
   else
     dist(t(x),method)
+}
+
+
+corw <- function(x,w,
+                 use=c("all.obs","complete.obs","pairwise.complete.obs")
+                 ) {
+  if(is.data.frame(x)) x <- as.matrix(x)
+  x <- x[w>0,,drop=F]
+  w <- w[w>0]
+
+  n <- nrow(x) # sample size
+  m <- ncol(x) # number of variables
+  if(missing(w)) w <- rep(1,n)
+  r <- matrix(0,m,m,dimnames=list(colnames(x),colnames(x)))
+  diag(r) <- 1
+  use <- match.arg(use)
+
+  pairu <- F
+  if(use=="all.obs") {
+    u <- rep(T,n)
+  } else if(use=="complete.obs") {
+    u <- apply(x,1,function(y) !any(is.na(y)))
+  } else if(use=="pairwise.complete.obs") {
+    pairu <- T
+    ux <- is.finite(x)
+  } else stop("unknown use")
+  
+  for(i in 1+seq(length=m-1)) {
+    for(j in seq(length=i-1)) {
+      if(pairu) u <- ux[,i] & ux[,j]
+      wu <- w[u]; xi <- x[u,i]; xj <- x[u,j]
+      ws <- sum(wu)
+      if(ws > 1e-8) {
+        xi <- xi - sum(wu*xi)/ws
+        xj <- xj - sum(wu*xj)/ws
+        vxi <- sum(wu*xi*xi)/ws
+        vxj <- sum(wu*xj*xj)/ws
+        if(min(vxi,vxj) > 1e-8)  {
+          vxij <- sum(wu*xi*xj)/ws
+          rij <- vxij/sqrt(vxi*vxj)
+        } else {
+          rij <- 0
+        }
+      } else {
+        rij <- 0
+      }
+      r[i,j] <- r[j,i] <- rij
+    }
+  }
+  r
+}
+
+### calculate distance by weight
+distw.pvclust <- function(x,w,method="correlation", use.cor="pairwise.complete.obs")
+{
+  if(!is.na(pmatch(method,"correlation"))){
+    res <- as.dist(1 - corw(x,w, use=use.cor))
+    attr(res,"method") <- "correlation"
+    return(res)
+  }
+  else if(!is.na(pmatch(method,"abscor"))){
+    res <- as.dist(1 - abs(corw(x,w, use=use.cor)))
+    attr(res,"method") <- "abscor"
+    return(res)
+  }
+  stop("wrong method")
 }
