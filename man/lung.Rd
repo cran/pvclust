@@ -4,7 +4,7 @@
 \title{DNA Microarray Data of Lung Tumors}
 \description{
 DNA Microarray data of 73 lung tissues including 67 lung tumors.
-There are 916 observations of genes for each lung tissue.}
+There are 916 observations of genes for each lung tissue.
 }
 \usage{data(lung)}
 \format{data frame of size \eqn{916 \times 73}{(916, 73)}.}

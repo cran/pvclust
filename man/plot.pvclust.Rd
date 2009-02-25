@@ -27,10 +27,10 @@
     corresponds to the color of AU values, BP values and edge numbers,
     respectively.}
   \item{cex.pv}{numeric value which specifies the size of characters for
-  \eqn{p}-values and edge numbers. See code{cex} argument for
+  \eqn{p}-values and edge numbers. See \code{cex} argument for
   \code{\link[graphics]{par}}.}
   \item{font.pv}{numeric value which specifies the font of characters
-    for \eqn{p}-values and edge numbers. See code{font} argument for
+    for \eqn{p}-values and edge numbers. See \code{font} argument for
     \code{\link[graphics]{par}}.}
   \item{col, cex, font}{in \code{text} function, they correspond to
     \code{col.pv}, \code{cex.pv} and \code{font.pv} in \code{plot}
