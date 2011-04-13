@@ -76,7 +76,7 @@ boot.hclust <- function(r, data, object.hclust, method.dist, use.cor,
                         method.hclust, nboot, store, weight=F)
 { 
   n     <- nrow(data)
-  size  <- round(n*r, digit=0)
+  size  <- round(n*r, digits=0)
   if(size == 0)
     stop("invalid scale parameter(r)")
   r <- size/n
@@ -86,7 +86,7 @@ boot.hclust <- function(r, data, object.hclust, method.dist, use.cor,
   st <- list()
   
   # bootstrap start
-  rp <- as.character(round(r,digit=2)); if(r == 1) rp <- paste(rp,".0",sep="")
+  rp <- as.character(round(r,digits=2)); if(r == 1) rp <- paste(rp,".0",sep="")
   cat(paste("Bootstrap (r = ", rp, ")... ", sep=""))
   w0 <- rep(1,n) # equal weight
   na.flag <- 0

@@ -361,7 +361,7 @@ msfit <- function(bp, r, nboot) {
   a$rss <- sum(fit$residual^2/vv)
   
   if((a$df <- sum(use) - 2) > 0) {
-    a$pchi <- pchisq(a$rss, lower=FALSE, df=a$df)
+    a$pchi <- pchisq(a$rss, lower.tail=FALSE, df=a$df)
   }
   else a$pchi <- 1.0
 
