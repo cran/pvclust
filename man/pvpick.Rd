@@ -45,5 +45,5 @@ pvrect(x, alpha=0.95, pv="au", type="geq", max.only=TRUE, border=2, ...)
     (number) corresponds to the \eqn{i}'th name vector in
     \code{clusters}.}
   }
-\author{Ryota Suzuki \email{ryota.suzuki@is.titech.ac.jp}}
+\author{Ryota Suzuki \email{suzuki@ef-prime.com}}
 \keyword{aplot}

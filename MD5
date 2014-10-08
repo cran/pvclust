@@ -1,0 +1,13 @@
+751a6b3f35581b472f4e12f382c79822 *DESCRIPTION
+37c39c6efcd73c5db52c9f7d2d26301b *NAMESPACE
+b0aabf99eb6db36b0452ee07a612dbff *R/pvclust-internal.R
+73faece83dca117e5f5e7f58418d5c34 *R/pvclust.R
+4ce445fdf8be068ed0f770d3c7bafd17 *data/lung.RData
+d4137b4bb2fc7b26f40719391597a20a *man/lung.Rd
+305eedf26b855648f7456e9da01e5094 *man/msfit.Rd
+7fb48846f78962a79e748621b99ba738 *man/msplot.Rd
+9dfaa13e0b453115bd6191036f6a5473 *man/plot.pvclust.Rd
+3ccb94ceeb320278445c2be3fd41bcbb *man/print.pvclust.Rd
+10d182003a1d3ab8ab43b6a0f3759974 *man/pvclust.Rd
+cc1b3150c5eaedb0877afdfd2f385bed *man/pvpick.Rd
+c5bd20b8d802595502f2f6dc4ce989df *man/seplot.Rd

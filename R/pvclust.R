@@ -6,12 +6,15 @@ pvclust <- function(data, method.hclust="average",
     n <- nrow(data); p <- ncol(data)
 
     # hclust for original data
-    METHODS <- c("ward", "single", "complete", "average", "mcquitty", 
-                 "median", "centroid")
-    method.hclust <- METHODS[pmatch(method.hclust, METHODS)]
+#    METHODS <- c("ward", "single", "complete", "average", "mcquitty", 
+#                 "median", "centroid")
+#    method.hclust <- METHODS[pmatch(method.hclust, METHODS)]
     distance <- dist.pvclust(data, method=method.dist, use.cor=use.cor)
     data.hclust <- hclust(distance, method=method.hclust)
     
+    # ward -> ward.D
+    if(method.hclust == "ward") method.hclust <- "ward.D"
+
     # multiscale bootstrap
     size <- floor(n*r)
     rl <- length(size)
@@ -224,7 +227,7 @@ pvpick <- function(x, alpha=0.95, pv="au", type="geq", max.only=TRUE)
         if     (pm==1) wh <- (x$edges[i,pv] >= alpha) # Greater than or Equals
         else if(pm==2) wh <- (x$edges[i,pv] <= alpha) # Lower than or Equals
         else if(pm==3) wh <- (x$edges[i,pv] >  alpha) # Greater Than
-        else if(pm==4) wh <- (x$edges[i,pv] >  alpha) # Lower Than
+        else if(pm==4) wh <- (x$edges[i,pv] <  alpha) # Lower Than
 
         if(wh)
           {
@@ -248,27 +251,36 @@ pvpick <- function(x, alpha=0.95, pv="au", type="geq", max.only=TRUE)
     return(a)
   }
 
-parPvclust <- function(cl, data, method.hclust="average",
+parPvclust <- function(cl=NULL, data, method.hclust="average",
                        method.dist="correlation", use.cor="pairwise.complete.obs",
                        nboot=1000, r=seq(.5,1.4,by=.1), store=FALSE,
                        weight=FALSE,
-                       init.rand=TRUE, seed=NULL)
+                       init.rand=TRUE, seed=NULL, iseed=NULL)
   {
-    if(!(require(snow))) stop("Package snow is required for parPvclust.")
-    
+    # if(!(require(snow))) stop("Package snow is required for parPvclust.")
+    if(!(require(parallel))) stop("Package parallel is required for parPvclust.")
+
     if((ncl <- length(cl)) < 2 || ncl > nboot) {
-      warning("Too small value for nboot: non-parallel version is executed.")
+      if(ncl > nboot)
+        warning("Too small value for nboot: non-parallel version is executed.")
+      else
+        warning("Too small (or NULL) cluster: non-parallel version is executed.")
+      
       return(pvclust(data,method.hclust,method.dist,use.cor,nboot,r,store))
     }
 
     if(init.rand) {
-      if(is.null(seed))
-        seed <- 1:length(cl)
-      else if(length(seed) != length(cl))
-        stop("seed and cl should have the same length.")
-      
-      # setting random seeds
-      parLapply(cl, as.list(seed), set.seed)
+      if(is.null(iseed) && !is.null(seed)) {
+        warning("\"seed\" option is deprecated. It is available for back compatibility but will be unavailable in the future.\nConsider using \"iseed\" instead.")
+        
+        if(length(seed) != length(cl))
+          stop("seed and cl should have the same length.")
+        
+        # setting random seeds
+        parallel::parLapply(cl, as.list(seed), set.seed)
+      } else {
+        parallel::clusterSetRNGStream(cl = cl, iseed = iseed)
+      }
     }
 
     # data: (n,p) matrix, n-samples, p-variables
@@ -301,7 +313,7 @@ parPvclust <- function(cl, data, method.hclust="average",
 
     cat("Multiscale bootstrap... ")
     
-    mlist <- parLapply(cl, nbl, pvclust.node,
+    mlist <- parallel::parLapply(cl, nbl, pvclust.node,
                        r=r, data=data, object.hclust=data.hclust, method.dist=method.dist,
                        use.cor=use.cor, method.hclust=method.hclust,
                        store=store, weight=weight)

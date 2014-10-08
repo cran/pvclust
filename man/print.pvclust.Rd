@@ -33,5 +33,5 @@
     the boundary.}
   \item{pchi}{\eqn{p}-values of chi-square test based on asymptotic theory.}
 }
-\author{Ryota Suzuki \email{ryota.suzuki@is.titech.ac.jp}}
+\author{Ryota Suzuki \email{suzuki@ef-prime.com}}
 \keyword{print}

@@ -14,6 +14,7 @@ There are 916 observations of genes for each lung tissue.
   section in this help for original data source.
 }
 \examples{
+\donttest{
 ## Reading the data
 data(lung)
 
@@ -41,6 +42,7 @@ lung.pp$clusters[[2]]
 
 ## Print its edge number
 lung.pp$edges[2]
+}
 
 ## We recommend parallel computing for large dataset as this one
 \dontrun{

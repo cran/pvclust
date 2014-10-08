@@ -19,5 +19,5 @@ xlab=NULL, ylab=NULL, ...)
   \item{...}{other graphical parameters to be passed to generic
     \code{plot} or \code{identify} function.}
 }
-\author{Ryota Suzuki \email{ryota.suzuki@is.titech.ac.jp}}
+\author{Ryota Suzuki \email{suzuki@ef-prime.com}}
 \keyword{hplot}

@@ -66,5 +66,5 @@ msfit(bp, r, nboot)
   "An approximately unbiased test of phylogenetic tree selection",
   \emph{Systematic Biology}, 51, 492-508.
 }
-\author{Ryota Suzuki \email{ryota.suzuki@is.titech.ac.jp}}
+\author{Ryota Suzuki \email{suzuki@ef-prime.com}}
 \keyword{htest}

@@ -12,5 +12,5 @@ msplot(x, edges=NULL, ...)
   \item{...}{other parameters to be used in the function.}
 }
 \seealso{\code{\link{plot.msfit}}}
-\author{Ryota Suzuki \email{ryota.suzuki@is.titech.ac.jp}}
+\author{Ryota Suzuki \email{suzuki@ef-prime.com}}
 \keyword{hplot}
