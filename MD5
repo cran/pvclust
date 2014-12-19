@@ -1,7 +1,7 @@
-983b2c9bfdae69c5b65bac21275efdc0 *DESCRIPTION
+c8d270dc7740a01321089f869aa222d8 *DESCRIPTION
 97c5dfc9e62e9ba7cd789609bc5d7f99 *NAMESPACE
 78aaa368d0e21dfa99912aeb0e1031fc *R/pvclust-internal.R
-73faece83dca117e5f5e7f58418d5c34 *R/pvclust.R
+667584464eb31a68d58f274d440f01ad *R/pvclust.R
 4ce445fdf8be068ed0f770d3c7bafd17 *data/lung.RData
 4dd897fecd4b0175cf3318af419bebab *man/lung.Rd
 25915dafebbf8ed6fb9234776ae7349c *man/msfit.Rd
