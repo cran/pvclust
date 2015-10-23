@@ -10,26 +10,29 @@
 \usage{
 pvclust(data, method.hclust="average",
         method.dist="correlation", use.cor="pairwise.complete.obs",
-        nboot=1000, r=seq(.5,1.4,by=.1), store=FALSE, weight=FALSE)
+        nboot=1000, parallel=FALSE, r=seq(.5,1.4,by=.1),
+        store=FALSE, weight=FALSE, iseed=NULL, quiet=FALSE)
 
 parPvclust(cl=NULL, data, method.hclust="average",
            method.dist="correlation", use.cor="pairwise.complete.obs",
            nboot=1000, r=seq(.5,1.4,by=.1), store=FALSE, weight=FALSE,
-           init.rand=TRUE, seed=NULL, iseed=NULL)
+           init.rand=NULL, iseed=NULL, quiet=FALSE)
 
 }
 \arguments{
   \item{data}{numeric data matrix or data frame.}
   \item{method.hclust}{
     the agglomerative method used in hierarchical clustering. This
-    should be (an abbreviation of) one of \code{"average"}, \code{"ward"},
-    \code{"single"}, \code{"complete"}, \code{"mcquitty"},
+    should be (an abbreviation of) one of \code{"average"}, \code{"ward.D"},
+    \code{"ward.D2"}, \code{"single"}, \code{"complete"}, \code{"mcquitty"},
     \code{"median"} or \code{"centroid"}. The default is
     \code{"average"}. See \code{method} argument in
     \code{\link[stats]{hclust}}.
   }
-  \item{method.dist}{the distance measure to be used. This should be (an
-    abbreviation of) one of \code{"correlation"}, \code{"uncentered"},
+  \item{method.dist}{the distance measure to be used. This should be
+    a character string, or a function which returns a \code{dist} object.
+    A character string should be (an abbreviation of)
+    one of \code{"correlation"}, \code{"uncentered"},
     \code{"abscor"} or those which are allowed for \code{method}
     argument in \code{dist} function. The default is
     \code{"correlation"}. See \emph{details} section in this help and
@@ -43,6 +46,15 @@ parPvclust(cl=NULL, data, method.hclust="average",
   }
   \item{nboot}{the number of bootstrap replications. The default is
     \code{1000}.}
+  \item{parallel}{switch for parallel computation.
+  If \code{FALSE} the computation is done in non-parallel mode.
+  If \code{TRUE} or a positive integer is supplied,
+  parallel computation is done with automatically generated PSOCK cluster.
+  Use \code{TRUE} for default cluster size (\code{parallel::detectCores() - 1}),
+  or specify the size by an integer.
+  If a \code{cluster} object is supplied the cluster is used for parallel computation.
+  Note that \code{NULL} is currently not allowed for using the default cluster.
+  }
   \item{r}{numeric vector which specifies the relative sample sizes of
     bootstrap replications. For original sample size \eqn{n} and
     bootstrap sample size \eqn{n'}, this is defined as \eqn{r=n'/n}.}
@@ -61,11 +73,12 @@ parPvclust(cl=NULL, data, method.hclust="average",
 %    length as \code{cl}. If \code{NULL} is specified,
 %    \code{1:length(cl)} is used as seed vector. The default is \code{NULL}.}
   \item{init.rand}{logical. If \code{init.rand=TRUE}, random number generators are initialized.
-    Use \code{iseed} argument to achieve reproducible results.}
-  \item{seed}{integer vector of random seeds. It should have the same
-    length as \code{cl}. \strong{This argument is duplicated and will be unavailable in the future. Consider using \code{iseed} instead.} }
-  \item{iseed}{an integer to be passed to \code{clusterSetRNGStream} when \code{init.rand=TRUE}.}
-
+    Use \code{iseed} argument to achieve reproducible results. \strong{This argument is duplicated and will be unavailable in the future.}}
+%  \item{seed}{integer vector of random seeds. It should have the same
+%    length as \code{cl}. \strong{This argument is duplicated and will be unavailable in the future. Consider using \code{iseed} instead.} }
+  \item{iseed}{An integer. If non-\code{NULL} value is supplied random number generators are initialized.
+  It is passed to \code{set.seed} or \code{clusterSetRNGStream}.}
+  \item{quiet}{logical. If \code{TRUE} it does not report the progress.}
 }
 \details{
   Function \code{pvclust} conducts multiscale bootstrap resampling to calculate
@@ -144,6 +157,10 @@ parPvclust(cl=NULL, data, method.hclust="average",
   \code{\link{text.pvclust}}, \code{\link{pvrect}} and
   \code{\link{pvpick}}.}
 \references{
+  Suzuki, R. and Shimodaira, H. (2006)
+  "Pvclust: an R package for assessing the uncertainty in hierarchical clustering",
+  \emph{Bioinformatics}, 22 (12): 1540-1542.
+  
   Shimodaira, H. (2004)
   "Approximately unbiased tests of regions using multistep-multiscale
   bootstrap resampling",
@@ -159,15 +176,14 @@ parPvclust(cl=NULL, data, method.hclust="average",
   \emph{The Fifteenth International Conference on Genome Informatics 2004},
   P034.
 
-  \url{http://www.is.titech.ac.jp/~shimo/prog/pvclust/}
+  \url{http://www.sigmath.es.osaka-u.ac.jp/shimo-lab/prog/pvclust/}
 }
 \examples{
-## using Boston data in package MASS
-library(MASS)
-data(Boston)
+### example using Boston data in package MASS
+data(Boston, package = "MASS")
 
-## multiscale bootstrap resampling
-boston.pv <- pvclust(Boston, nboot=100)
+## multiscale bootstrap resampling (non-parallel)
+boston.pv <- pvclust(Boston, nboot=100, parallel=FALSE)
 
 ## CAUTION: nboot=100 may be too small for actual use.
 ##          We suggest nboot=1000 or larger.
@@ -190,19 +206,32 @@ msplot(boston.pv, edges=c(2,4,6,7))
 
 par(ask=ask.bak)
 
-## Print clusters with high p-values
+## print clusters with high p-values
 boston.pp <- pvpick(boston.pv)
 boston.pp
 
-\dontrun{
-## parallel computation
-library(parallel)
-cl <- makeCluster(2, type = "PSOCK")
+### Using a custom distance measure
 
-## parallel version of pvclust
-boston.pv <- parPvclust(cl, Boston, nboot=1000)
-stopCluster(cl)
+## Define a distance function which returns an object of class "dist".
+## The function must have only one argument "x" (data matrix or data.frame).
+cosine <- function(x) {
+    x <- as.matrix(x)
+    y <- t(x) \%*\% x
+    res <- 1 - y / (sqrt(diag(y)) \%*\% t(sqrt(diag(y))))
+    res <- as.dist(res)
+    attr(res, "method") <- "cosine"
+    return(res)
 }
+
+result <- pvclust(Boston, method.dist=cosine, nboot=100)
+plot(result)
+
+\dontrun{
+### parallel computation
+result.par <- pvclust(Boston, nboot=1000, parallel=TRUE)
+plot(result.par)
+}
+
 }
 \author{Ryota Suzuki \email{suzuki@ef-prime.com}}
 \keyword{cluster}
